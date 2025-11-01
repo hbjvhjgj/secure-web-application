@@ -21,15 +21,13 @@ if not os.path.exists(DB_FILE):
         json.dump({}, f)
 
 # ---- persistent encryption key ----
-if "fernet" not in st.session_state:
-    if not os.path.exists("secret.key"):
-        with open("secret.key", "wb") as keyfile:
-            keyfile.write(Fernet.generate_key())
-    with open("secret.key", "rb") as keyfile:
-        key = keyfile.read()
-    st.session_state.fernet = Fernet(key)
+# Inside your main logged-in section
+st.success(f"Welcome, {st.session_state['username']}!")
 
-fernet = st.session_state.fernet
+if st.button("Logout"):
+    st.session_state.clear()
+    st.success("You have been logged out.")
+    st.rerun()
 
 # ===============================
 # HELPERS
