@@ -1,0 +1,17 @@
+This project is a secure web application that demonstrates key cybersecurity concepts including authentication, encryption, input validation, session management, and secure error handling.
+It is built using Python for backend logic and Streamlit for the frontend interface.
+
+The app allows users to register, log in, encrypt/decrypt data, and update profiles, while showcasing proper security measures and manual testing of 20 different vulnerabilities and use cases.
+
+⚙️ Features Implemented
+Feature	Description	Purpose
+User Registration & Login	Stores usernames and hashed passwords using bcrypt	Authentication & password security
+Password Validation	Enforces strong passwords (min length, digits, symbols)	Password strength testing
+Input Validation	Prevents SQL/script injection and checks for valid formats	Injection and validation testing
+Session Management	Manages user sessions and prevents unauthorized access	Unauthorized access testing
+Data Storage Layer	Stores sensitive data securely (hashed/encrypted)	Data confidentiality
+Error Handling	Prevents sensitive info leakage in error messages	Information leakage testing
+Encryption / Decryption	Allows users to encrypt and decrypt data	Data protection testing
+Audit / Activity Logs	Records all user actions securely	Integrity and traceability
+Profile Update Page	Allows safe editing of user details	Access control testing
+File Upload Validation (Optional)	Restricts upload types (e.g., .txt, .jpg)	File-based attack testing
