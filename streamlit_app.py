@@ -38,6 +38,18 @@ def log_action(action):
     with open("audit_log.txt", "a") as f:
         f.write(f"{datetime.datetime.now()} - {action}\n")
 
+def safe_run(func, *args, **kwargs):
+    """
+    Runs a function safely.
+    If an exception occurs, shows a generic error message and logs the error.
+    """
+    try:
+        return func(*args, **kwargs)
+    except Exception as e:
+        st.error("⚠️ An unexpected error occurred. Please try again.")
+        log_action(f"Error: {str(e)}")
+        return None
+
 # ---------- App Logic ----------
 
 st.title("🔐 Secure Cybersecurity Demo App")
@@ -66,7 +78,7 @@ if choice == "Register":
     new_password = st.text_input("Choose a Password", type="password")
     confirm_password = st.text_input("Confirm Password", type="password")
 
-    if st.button("Register"):
+    def register_user():
         if new_username in users:
             st.error("Username already exists.")
         elif not is_valid_email(new_email):
@@ -82,6 +94,9 @@ if choice == "Register":
             log_action(f"User registered: {new_username}")
             st.success("✅ Registration successful!")
 
+    if st.button("Register"):
+        safe_run(register_user)
+
 # ---------- Login ----------
 elif choice == "Login":
     st.subheader("🔑 User Login")
@@ -89,29 +104,32 @@ elif choice == "Login":
     username = st.text_input("Username")
     password = st.text_input("Password", type="password")
 
-    if st.session_state["account_locked"]:
-        st.error("Account locked due to too many failed attempts.")
-    else:
-        if st.button("Login"):
-            if username in users:
-                hashed_input = hash_password(password)
-                if hashed_input == users[username]["password"]:
-                    st.session_state["logged_in"] = True
-                    st.session_state["username"] = username
-                    st.session_state["login_attempts"] = 0
-                    log_action(f"User logged in: {username}")
-                    st.success(f"Welcome, {username}!")
-                    st.rerun()
-                else:
-                    st.session_state["login_attempts"] += 1
-                    remaining = 5 - st.session_state["login_attempts"]
-                    st.error(f"Incorrect password. {remaining} attempts left.")
+    def login_user():
+        if st.session_state["account_locked"]:
+            st.error("Account locked due to too many failed attempts.")
+            return
+        if username in users:
+            hashed_input = hash_password(password)
+            if hashed_input == users[username]["password"]:
+                st.session_state["logged_in"] = True
+                st.session_state["username"] = username
+                st.session_state["login_attempts"] = 0
+                log_action(f"User logged in: {username}")
+                st.success(f"Welcome, {username}!")
+                st.rerun()
             else:
-                st.error("User not found.")
+                st.session_state["login_attempts"] += 1
+                remaining = 5 - st.session_state["login_attempts"]
+                st.error(f"Incorrect password. {remaining} attempts left.")
+        else:
+            st.error("User not found.")
 
-            if st.session_state["login_attempts"] >= 5:
-                st.session_state["account_locked"] = True
-                st.error("Too many failed attempts. Account locked.")
+        if st.session_state["login_attempts"] >= 5:
+            st.session_state["account_locked"] = True
+            st.error("Too many failed attempts. Account locked for this session.")
+
+    if st.button("Login"):
+        safe_run(login_user)
 
 # ---------- Profile ----------
 elif choice == "Profile":
@@ -121,7 +139,8 @@ elif choice == "Profile":
         st.write(f"Email: {users[st.session_state['username']]['email']}")
 
         new_email = st.text_input("Update Email")
-        if st.button("Update Email"):
+
+        def update_email():
             if not is_valid_email(new_email):
                 st.error("Invalid email format.")
             else:
@@ -129,6 +148,9 @@ elif choice == "Profile":
                 save_users(users)
                 log_action(f"User updated email: {st.session_state['username']}")
                 st.success("Email updated successfully!")
+
+        if st.button("Update Email"):
+            safe_run(update_email)
 
     else:
         st.warning("Please log in first.")
@@ -138,24 +160,29 @@ elif choice == "Encrypt/Decrypt":
     st.subheader("🔐 Encrypt / Decrypt Data")
 
     data = st.text_area("Enter text")
+
     if st.button("Encrypt"):
-        if data:
-            encrypted = encrypt_data(data)
-            st.write("Encrypted Data:", encrypted)
-            log_action(f"Data encrypted by {st.session_state.get('username', 'guest')}")
-        else:
-            st.warning("Please enter text to encrypt.")
+        def do_encrypt():
+            if data:
+                encrypted = encrypt_data(data)
+                st.write("Encrypted Data:", encrypted)
+                log_action(f"Data encrypted by {st.session_state.get('username', 'guest')}")
+            else:
+                st.warning("Please enter text to encrypt.")
+        safe_run(do_encrypt)
 
     if st.button("Decrypt"):
-        if data:
-            try:
-                decrypted = decrypt_data(data)
-                st.write("Decrypted Data:", decrypted)
-                log_action(f"Data decrypted by {st.session_state.get('username', 'guest')}")
-            except:
-                st.error("Invalid encrypted data.")
-        else:
-            st.warning("Please enter text to decrypt.")
+        def do_decrypt():
+            if data:
+                try:
+                    decrypted = decrypt_data(data)
+                    st.write("Decrypted Data:", decrypted)
+                    log_action(f"Data decrypted by {st.session_state.get('username', 'guest')}")
+                except:
+                    st.error("Invalid encrypted data.")
+            else:
+                st.warning("Please enter text to decrypt.")
+        safe_run(do_decrypt)
 
 # ---------- Logout ----------
 elif choice == "Logout":
