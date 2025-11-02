@@ -1,17 +1,41 @@
-This project is a secure web application that demonstrates key cybersecurity concepts including authentication, encryption, input validation, session management, and secure error handling.
-It is built using Python for backend logic and Streamlit for the frontend interface.
+# Secure Cybersecurity Demo App
 
-The app allows users to register, log in, encrypt/decrypt data, and update profiles, while showcasing proper security measures and manual testing of 20 different vulnerabilities and use cases.
+## Overview
+This is a small secure web application built with **Streamlit** to demonstrate key cybersecurity concepts, including:
 
-⚙️ Features Implemented
-Feature	Description	Purpose
-User Registration & Login	Stores usernames and hashed passwords using bcrypt	Authentication & password security
-Password Validation	Enforces strong passwords (min length, digits, symbols)	Password strength testing
-Input Validation	Prevents SQL/script injection and checks for valid formats	Injection and validation testing
-Session Management	Manages user sessions and prevents unauthorized access	Unauthorized access testing
-Data Storage Layer	Stores sensitive data securely (hashed/encrypted)	Data confidentiality
-Error Handling	Prevents sensitive info leakage in error messages	Information leakage testing
-Encryption / Decryption	Allows users to encrypt and decrypt data	Data protection testing
-Audit / Activity Logs	Records all user actions securely	Integrity and traceability
-Profile Update Page	Allows safe editing of user details	Access control testing
-File Upload Validation (Optional)	Restricts upload types (e.g., .txt, .jpg)	File-based attack testing
+- User authentication with **SHA-256 hashed passwords**
+- Strong password validation
+- Email validation
+- Session management and logout
+- Data protection using **encryption/decryption**
+- Audit logging of user actions
+- Error handling to prevent sensitive information leakage
+
+The app allows users to **register, login, update profiles, encrypt/decrypt data**, and test common security scenarios manually.
+
+---
+
+## Features
+
+| Feature | Description | Purpose |
+|---------|-------------|---------|
+| User Registration & Login | Stores usernames and **hashed passwords** | Authentication and password testing |
+| Password Validation | Enforces strong passwords (length, digits, symbols) | Password strength testing |
+| Input Forms | Validates numeric/text input | Injection and validation testing |
+| Session Management | Manage sessions and logout | Unauthorized access testing |
+| Data Storage Layer | Stores data securely (hashed/encrypted) | Data confidentiality testing |
+| Error Handling | Handles errors without leaking info | Information leakage testing |
+| Encryption / Decryption | Encrypt or decrypt text | Data protection testing |
+| Audit / Activity Logs | Track user actions securely | Integrity and traceability testing |
+| Profile Update Page | Edit user details with validation | Access control testing |
+| File Upload Validation | (Optional) Restrict file types | File-based attack testing |
+
+---
+
+## Installation & Setup
+
+1. Clone the repository:
+
+```bash
+git clone <your-github-repo-url>
+cd <repo-folder>
