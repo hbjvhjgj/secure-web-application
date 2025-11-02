@@ -32,36 +32,44 @@ def load_users():
     try:
         with open("users.json", "r") as f:
             return json.load(f)
-    except:
+    except Exception as e:
+        st.error("Failed to load user data.")
+        log_action(f"Error loading users: {str(e)}")
         return {}
 
 def save_users(users):
-    with open("users.json", "w") as f:
-        json.dump(users, f, indent=4)
+    try:
+        with open("users.json", "w") as f:
+            json.dump(users, f, indent=4)
+    except Exception as e:
+        st.error("Failed to save user data.")
+        log_action(f"Error saving users: {str(e)}")
 
 def log_action(action):
-    with open("audit_log.txt", "a") as f:
-        f.write(f"{datetime.datetime.now()} - {action}\n")
+    try:
+        with open("audit_log.txt", "a") as f:
+            f.write(f"{datetime.datetime.now()} - {action}\n")
+    except:
+        pass  # Fail silently if logging fails
 
 # ---------- Main App ----------
 def main():
-    users = load_users()
-
-    # Initialize session state
-    if "logged_in" not in st.session_state:
-        st.session_state["logged_in"] = False
-    if "username" not in st.session_state:
-        st.session_state["username"] = None
-    if "login_attempts" not in st.session_state:
-        st.session_state["login_attempts"] = 0
-    if "account_locked" not in st.session_state:
-        st.session_state["account_locked"] = False
-
-    st.title("Secure Cybersecurity Demo App")
-    menu = ["Home", "Register", "Login", "Profile", "Encrypt/Decrypt", "Logout"]
-    choice = st.sidebar.selectbox("Menu", menu)
-
     try:
+        users = load_users()
+
+        # Initialize session state
+        if "logged_in" not in st.session_state:
+            st.session_state["logged_in"] = False
+        if "username" not in st.session_state:
+            st.session_state["username"] = None
+        if "login_attempts" not in st.session_state:
+            st.session_state["login_attempts"] = 0
+        if "account_locked" not in st.session_state:
+            st.session_state["account_locked"] = False
+
+        st.title("Secure Cybersecurity Demo App")
+        menu = ["Home", "Register", "Login", "Profile", "Encrypt/Decrypt", "Logout"]
+        choice = st.sidebar.selectbox("Menu", menu)
 
         # ---------- Registration ----------
         if choice == "Register":
@@ -72,20 +80,24 @@ def main():
             confirm_password = st.text_input("Confirm Password", type="password")
 
             if st.button("Register"):
-                if new_username in users:
-                    st.error("Username already exists.")
-                elif not is_valid_email(new_email):
-                    st.error("Invalid email format.")
-                elif not is_strong_password(new_password):
-                    st.error("Password must be at least 8 characters, contain letters and numbers.")
-                elif new_password != confirm_password:
-                    st.error("Passwords do not match.")
-                else:
-                    hashed_password = hash_password(new_password)
-                    users[new_username] = {"email": new_email, "password": hashed_password}
-                    save_users(users)
-                    log_action(f"User registered: {new_username}")
-                    st.success("Registration successful!")
+                try:
+                    if new_username in users:
+                        st.error("Username already exists.")
+                    elif not is_valid_email(new_email):
+                        st.error("Invalid email format.")
+                    elif not is_strong_password(new_password):
+                        st.error("Password must be at least 8 characters, contain letters and numbers.")
+                    elif new_password != confirm_password:
+                        st.error("Passwords do not match.")
+                    else:
+                        hashed_password = hash_password(new_password)
+                        users[new_username] = {"email": new_email, "password": hashed_password}
+                        save_users(users)
+                        log_action(f"User registered: {new_username}")
+                        st.success("Registration successful!")
+                except Exception as e:
+                    st.error("Registration failed. Please try again.")
+                    log_action(f"Registration error for {new_username}: {str(e)}")
 
         # ---------- Login ----------
         elif choice == "Login":
@@ -97,25 +109,29 @@ def main():
                 st.error("Account locked due to too many failed attempts.")
             else:
                 if st.button("Login"):
-                    if username in users:
-                        hashed_input = hash_password(password)
-                        if hashed_input == users[username]["password"]:
-                            st.session_state["logged_in"] = True
-                            st.session_state["username"] = username
-                            st.session_state["login_attempts"] = 0
-                            log_action(f"User logged in: {username}")
-                            st.success(f"Welcome, {username}!")
-                            st.rerun()
+                    try:
+                        if username in users:
+                            hashed_input = hash_password(password)
+                            if hashed_input == users[username]["password"]:
+                                st.session_state["logged_in"] = True
+                                st.session_state["username"] = username
+                                st.session_state["login_attempts"] = 0
+                                log_action(f"User logged in: {username}")
+                                st.success(f"Welcome, {username}!")
+                                st.rerun()
+                            else:
+                                st.session_state["login_attempts"] += 1
+                                remaining = 5 - st.session_state["login_attempts"]
+                                st.error(f"Incorrect password. {remaining} attempts left.")
                         else:
-                            st.session_state["login_attempts"] += 1
-                            remaining = 5 - st.session_state["login_attempts"]
-                            st.error(f"Incorrect password. {remaining} attempts left.")
-                    else:
-                        st.error("User not found.")
+                            st.error("User not found.")
 
-                    if st.session_state["login_attempts"] >= 5:
-                        st.session_state["account_locked"] = True
-                        st.error("Too many failed attempts. Account locked for this session.")
+                        if st.session_state["login_attempts"] >= 5:
+                            st.session_state["account_locked"] = True
+                            st.error("Too many failed attempts. Account locked for this session.")
+                    except Exception as e:
+                        st.error("Login failed. Please try again.")
+                        log_action(f"Login error for {username}: {str(e)}")
 
         # ---------- Profile ----------
         elif choice == "Profile":
@@ -126,13 +142,17 @@ def main():
 
                 new_email = st.text_input("Update Email")
                 if st.button("Update Email"):
-                    if not is_valid_email(new_email):
-                        st.error("Invalid email format.")
-                    else:
-                        users[st.session_state["username"]]["email"] = new_email
-                        save_users(users)
-                        log_action(f"User updated email: {st.session_state['username']}")
-                        st.success("Email updated successfully!")
+                    try:
+                        if not is_valid_email(new_email):
+                            st.error("Invalid email format.")
+                        else:
+                            users[st.session_state["username"]]["email"] = new_email
+                            save_users(users)
+                            log_action(f"User updated email: {st.session_state['username']}")
+                            st.success("Email updated successfully!")
+                    except Exception as e:
+                        st.error("Failed to update profile. Try again later.")
+                        log_action(f"Profile update error for {st.session_state['username']}: {str(e)}")
             else:
                 st.warning("Please log in first.")
 
@@ -142,33 +162,42 @@ def main():
             data = st.text_area("Enter text")
 
             if st.button("Encrypt"):
-                if data:
-                    encrypted = encrypt_data(data)
-                    st.write("Encrypted Data:", encrypted)
-                    log_action(f"Data encrypted by {st.session_state.get('username', 'guest')}")
-                else:
-                    st.warning("Please enter text to encrypt.")
+                try:
+                    if data:
+                        encrypted = encrypt_data(data)
+                        st.write("Encrypted Data:", encrypted)
+                        log_action(f"Data encrypted by {st.session_state.get('username', 'guest')}")
+                    else:
+                        st.warning("Please enter text to encrypt.")
+                except Exception as e:
+                    st.error("Encryption failed. Please try again.")
+                    log_action(f"Encryption error: {str(e)}")
 
             if st.button("Decrypt"):
-                if data:
-                    try:
+                try:
+                    if data:
                         decrypted = decrypt_data(data)
                         st.write("Decrypted Data:", decrypted)
                         log_action(f"Data decrypted by {st.session_state.get('username', 'guest')}")
-                    except:
-                        st.error("Invalid encrypted data.")
-                else:
-                    st.warning("Please enter text to decrypt.")
+                    else:
+                        st.warning("Please enter text to decrypt.")
+                except Exception as e:
+                    st.error("Decryption failed. Please enter valid encrypted data.")
+                    log_action(f"Decryption error: {str(e)}")
 
         # ---------- Logout ----------
         elif choice == "Logout":
-            if st.session_state["logged_in"]:
-                log_action(f"User logged out: {st.session_state['username']}")
-                st.session_state["logged_in"] = False
-                st.session_state["username"] = None
-                st.success("You have been logged out.")
-            else:
-                st.info("No user logged in.")
+            try:
+                if st.session_state["logged_in"]:
+                    log_action(f"User logged out: {st.session_state['username']}")
+                    st.session_state["logged_in"] = False
+                    st.session_state["username"] = None
+                    st.success("You have been logged out.")
+                else:
+                    st.info("No user logged in.")
+            except Exception as e:
+                st.error("Logout failed. Please try again.")
+                log_action(f"Logout error: {str(e)}")
 
         # ---------- Home ----------
         else:
@@ -176,7 +205,7 @@ def main():
 
     except Exception as e:
         st.error("An unexpected error occurred. Please try again.")
-        log_action(f"Unhandled error: {str(e)}")
+        log_action(f"Unhandled app error: {str(e)}")
 
 if __name__ == "__main__":
     main()
